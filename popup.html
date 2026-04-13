@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      margin: 0;
+    }
+    .status {
+      margin-bottom: 12px;
+      padding: 8px;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .status.ready {
+      background: #e6f7e6;
+      color: #52c41a;
+    }
+    .status.error {
+      background: #fff1f0;
+      color: #f5222d;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .btn {
+      flex: 1;
+      padding: 10px 12px;
+      background: #1677ff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn:hover {
+      background: #4096ff;
+    }
+    .btn:disabled {
+      background: #d9d9d9;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #333;
+    }
+    .btn-secondary:hover {
+      background: #e8e8e8;
+    }
+    .info {
+      font-size: 12px;
+      color: #8c8c8c;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .divider {
+      border: none;
+      border-top: 1px solid #e8e8e8;
+      margin: 12px 0;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 8px 0;
+      user-select: none;
+    }
+    .section-header:hover {
+      opacity: 0.8;
+    }
+    .section-title {
+      font-weight: 500;
+      font-size: 14px;
+    }
+    .section-arrow {
+      font-size: 12px;
+      color: #999;
+      transition: transform 0.2s;
+    }
+    .section-arrow.collapsed {
+      transform: rotate(-90deg);
+    }
+    .section-body {
+      overflow: hidden;
+      transition: max-height 0.2s ease;
+    }
+    .section-body.collapsed {
+      max-height: 0 !important;
+    }
+    .setting {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+    }
+    .setting-label {
+      flex: 1;
+      font-size: 13px;
+    }
+    .field-list {
+      padding: 4px 0;
+    }
+    .field-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 0;
+    }
+    .field-name {
+      flex: 1;
+      font-size: 13px;
+    }
+    .toggle {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #d9d9d9;
+      border-radius: 20px;
+      transition: 0.3s;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle input:checked + .toggle-slider {
+      background: #1677ff;
+    }
+    .toggle input:checked + .toggle-slider:before {
+      transform: translateX(16px);
+    }
+  </style>
+</head>
+<body>
+  <div id="status" class="status ready">等待操作...</div>
+  <div class="btn-row">
+    <button id="copySelectedBtn" class="btn">复制选中行</button>
+    <button id="copyAllBtn" class="btn btn-secondary">复制全部</button>
+  </div>
+  <div class="info">快捷键: Ctrl+Shift+X</div>
+
+  <hr class="divider">
+
+  <div class="section-header" id="settingsToggle">
+    <span class="section-title">字段设置</span>
+    <span class="section-arrow collapsed" id="settingsArrow">&#9660;</span>
+  </div>
+  <div class="section-body collapsed" id="settingsBody">
+    <div class="setting">
+      <span class="setting-label">包含表头</span>
+      <label class="toggle">
+        <input type="checkbox" id="includeHeader">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div id="fieldList" class="field-list"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

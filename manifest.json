@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "生意参谋表格复制",
+  "version": "1.0",
+  "description": "一键复制生意参谋表格数据为Tab分隔格式，便于粘贴到Excel",
+  "permissions": [
+    "activeTab",
+    "clipboardWrite",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://sycm.taobao.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://sycm.taobao.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "commands": {
+    "copy-table": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+X",
+        "mac": "Command+Shift+X"
+      },
+      "description": "复制当前页表格数据"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
