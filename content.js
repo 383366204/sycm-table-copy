@@ -115,10 +115,10 @@ function injectStyles() {
   var style = document.createElement('style');
   style.id = 'stc-checkbox-styles';
   style.textContent = [
-    '.stc-cb-col { width: 36px !important; min-width: 36px !important; max-width: 36px !important; text-align: center !important; padding: 4px !important; }',
-    '.stc-cb-col input[type="checkbox"] { width: 16px !important; height: 16px !important; cursor: pointer; margin: 0 !important; vertical-align: middle !important; }',
-    '.ant-table-fixed-left { left: 0 !important; }',
-    '.ant-table-fixed-left .ant-table-body-inner { overflow: hidden !important; }'
+    '.stc-cb-overlay { position: relative !important; }',
+    '.stc-cb-overlay input[type="checkbox"] { position: absolute !important; left: 4px !important; top: 50% !important; transform: translateY(-50%) !important; width: 16px !important; height: 16px !important; cursor: pointer; margin: 0 !important; z-index: 10 !important; }',
+    '.stc-cb-overlay-cell { padding-left: 28px !important; }',
+    '.stc-cb-overlay-th { padding-left: 28px !important; }'
   ].join('\n');
   var existing = document.getElementById('stc-checkbox-styles');
   if (existing) existing.remove();
@@ -130,9 +130,9 @@ function startObserver() {
   observer = new MutationObserver(function() {
     var leftTable = findLeftFixedTable();
     if (!leftTable) return;
-    var headerNeedsInject = !leftTable.querySelector('thead .stc-cb-col');
+    var headerNeedsInject = !leftTable.querySelector('thead .stc-cb-overlay');
     var rowCount = leftTable.querySelectorAll('tbody tr[data-row-key^="tree-node-"]').length;
-    var cbCount = leftTable.querySelectorAll('tbody .stc-cb-col').length;
+    var cbCount = leftTable.querySelectorAll('tbody .stc-cb-overlay').length;
     if (headerNeedsInject || (rowCount > 0 && cbCount < rowCount)) {
       injectCheckboxes();
     }
@@ -154,57 +154,37 @@ function injectCheckboxes() {
   }
   console.log('[STC] Left fixed table found');
 
-  document.querySelectorAll('.ant-table-fixed-right .stc-cb-col').forEach(function(el) {
-    el.remove();
-  });
-
-  var leftContainer = document.querySelector('.ant-table-fixed-left');
-  var currentWidth = leftContainer.offsetWidth;
-  var hasCheckbox = !!leftTable.querySelector('thead .stc-cb-col');
-  var newWidth = hasCheckbox ? currentWidth : currentWidth + 36;
-  leftContainer.style.width = newWidth + 'px';
-
   var thead = leftTable.querySelector('thead');
   if (!thead) {
     console.log('[STC] No thead in left fixed table');
     return;
   }
 
-  if (!thead.querySelector('.stc-cb-col')) {
-    var firstTh = thead.querySelector('tr th');
-    if (firstTh) {
-      var colgroup = leftTable.querySelector('colgroup');
-      if (colgroup) {
-        var col = document.createElement('col');
-        col.style.width = '36px';
-        colgroup.insertBefore(col, colgroup.firstChild);
-      }
-
-      var th = document.createElement('th');
-      th.className = 'stc-cb-col';
-      var selectAllCb = document.createElement('input');
-      selectAllCb.type = 'checkbox';
-      selectAllCb.title = '全选/全不选';
-      selectAllCb.addEventListener('change', function() {
-        var checked = this.checked;
-        var cbs = leftTable.querySelectorAll('tbody .stc-cb-col input[type="checkbox"]');
-        cbs.forEach(function(cb) {
-          cb.checked = checked;
-          var key = cb.closest('tr').getAttribute('data-row-key');
-          if (key) {
-            if (checked) {
-              selectedRowKeys.add(key);
-            } else {
-              selectedRowKeys.delete(key);
-            }
+  var firstTh = thead.querySelector('tr th');
+  if (firstTh && !firstTh.classList.contains('stc-cb-overlay')) {
+    firstTh.classList.add('stc-cb-overlay');
+    var selectAllCb = document.createElement('input');
+    selectAllCb.type = 'checkbox';
+    selectAllCb.title = '全选/全不选';
+    selectAllCb.addEventListener('change', function() {
+      var checked = this.checked;
+      var cbs = leftTable.querySelectorAll('tbody .stc-cb-overlay input[type="checkbox"]');
+      cbs.forEach(function(cb) {
+        cb.checked = checked;
+        var key = cb.closest('tr').getAttribute('data-row-key');
+        if (key) {
+          if (checked) {
+            selectedRowKeys.add(key);
+          } else {
+            selectedRowKeys.delete(key);
           }
-        });
-        console.log('[STC] Select all:', checked, 'selectedRowKeys size:', selectedRowKeys.size);
+        }
       });
-      th.appendChild(selectAllCb);
-      firstTh.parentNode.insertBefore(th, firstTh);
-      console.log('[STC] Header checkbox injected in left fixed table');
-    }
+      console.log('[STC] Select all:', checked, 'selectedRowKeys size:', selectedRowKeys.size);
+    });
+    firstTh.insertBefore(selectAllCb, firstTh.firstChild);
+    firstTh.classList.add('stc-cb-overlay-th');
+    console.log('[STC] Header checkbox injected');
   }
 
   var tbody = leftTable.querySelector('tbody');
@@ -216,12 +196,11 @@ function injectCheckboxes() {
   var rows = tbody.querySelectorAll('tr.ant-table-row[data-row-key^="tree-node-"]');
   console.log('[STC] Found', rows.length, 'rows in left fixed table');
   rows.forEach(function(tr) {
-    if (tr.querySelector('.stc-cb-col')) return;
     var firstTd = tr.querySelector('td');
-    if (!firstTd) return;
+    if (!firstTd || firstTd.classList.contains('stc-cb-overlay')) return;
 
-    var td = document.createElement('td');
-    td.className = 'stc-cb-col';
+    firstTd.classList.add('stc-cb-overlay');
+    firstTd.classList.add('stc-cb-overlay-cell');
     var cb = document.createElement('input');
     cb.type = 'checkbox';
     var key = tr.getAttribute('data-row-key');
@@ -237,16 +216,15 @@ function injectCheckboxes() {
       updateSelectAllState(leftTable);
       console.log('[STC] Row checkbox changed:', key, this.checked, 'selectedRowKeys size:', selectedRowKeys.size);
     });
-    td.appendChild(cb);
-    firstTd.parentNode.insertBefore(td, firstTd);
+    firstTd.insertBefore(cb, firstTd.firstChild);
   });
   console.log('[STC] injectCheckboxes completed');
 }
 
 function updateSelectAllState(leftTable) {
-  var selectAllCb = leftTable.querySelector('thead .stc-cb-col input[type="checkbox"]');
+  var selectAllCb = leftTable.querySelector('thead .stc-cb-overlay input[type="checkbox"]');
   if (!selectAllCb) return;
-  var allCbs = leftTable.querySelectorAll('tbody .stc-cb-col input[type="checkbox"]');
+  var allCbs = leftTable.querySelectorAll('tbody .stc-cb-overlay input[type="checkbox"]');
   var total = allCbs.length;
   if (total === 0) return;
   var checkedCount = 0;
@@ -294,7 +272,7 @@ function extractRows(table, selectedFields, includeHeader, selectedKeys) {
   var columnIndices = [];
 
   headerCells.forEach(function(th, idx) {
-    if (th.classList.contains('stc-cb-col')) return;
+    if (th.classList.contains('stc-cb-overlay')) return;
     if (isFixedCell(th)) return;
     var text = th.textContent.trim().replace(/\s+/g, '');
     if (text === '操作' || text === '') return;
@@ -329,7 +307,7 @@ function extractRows(table, selectedFields, includeHeader, selectedKeys) {
     var rowData = [];
     columnIndices.forEach(function(colIdx) {
       var cell = cells[colIdx];
-      if (!cell || isFixedCell(cell) || cell.classList.contains('stc-cb-col')) return;
+      if (!cell || isFixedCell(cell) || cell.classList.contains('stc-cb-overlay')) return;
       var fieldName = headerData[columnIndices.indexOf(colIdx)];
       if (useFieldFilter && selectedFields.indexOf(fieldName) === -1) return;
       rowData.push(getCellText(cell));
